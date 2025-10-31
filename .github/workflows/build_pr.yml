@@ -23,11 +23,18 @@ jobs:
           node-version: "22"
           registry-url: "https://registry.npmjs.org"
 
-      - uses: pnpm/action-setup@v4
-        name: Install pnpm
-        id: pnpm-install
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
         with:
           run_install: false
+
+      - name: Cache pnpm store
+        uses: actions/cache@v3
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Build and check
         run: |
@@ -36,12 +43,12 @@ jobs:
         env:
           CROWDIN_PROJECT_ID: ""
           CROWDIN_PERSONAL_TOKEN: ""
-          # OPENLIST_FRONTEND_BUILD_MODE: dev
-          # OPENLIST_FRONTEND_BUILD_COMPRESS: false
+          OPENLIST_FRONTEND_BUILD_MODE: dev
+          OPENLIST_FRONTEND_BUILD_COMPRESS: false
 
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: openlist-frontend-dist-dev-${{ github.sha }}
+          name: openlist-frontend-dist-dev-${{ github.run_number }}-${{ github.sha }}
           path: dist/
           retention-days: 7
