@@ -162,7 +162,7 @@ jobs:
             ${{ steps.get_current_tag.outputs.current_tag }} \
             dist/openlist-frontend-dist-v*.tar.gz lite-dist/openlist-frontend-dist-lite-v*.tar.gz dist/i18n.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Prepare for npm
         run: |
