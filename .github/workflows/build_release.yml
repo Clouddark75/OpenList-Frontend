@@ -67,6 +67,11 @@ jobs:
         with:
           run_install: false
 
+      - name: Setup git identity (for fork)
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"   
+
       - name: Update package.json and commit
         if: github.event_name == 'workflow_dispatch'
         run: |
