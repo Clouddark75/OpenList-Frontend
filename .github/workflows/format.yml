@@ -26,15 +26,6 @@ jobs:
       - name: Format
         run: pnpm run format
 
-      - name: "Import GPG key"
-        id: import-gpg
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.BOT_GPG_PASSPHRASE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-
       - name: Commit and Push
         uses: stefanzweifel/git-auto-commit-action@v6
         with:
