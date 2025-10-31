@@ -108,7 +108,7 @@ jobs:
       - name: Build Release
         run: |
           chmod +x build.sh
-          ./build.sh --release --compress
+          ./build.sh --release --compress --skip-i18n
         env:
           CROWDIN_PROJECT_ID: ""
           CROWDIN_PERSONAL_TOKEN: ""
@@ -121,7 +121,7 @@ jobs:
       - name: Build Lite Release
         run: |
           chmod +x build.sh
-          ./build.sh --release --compress --lite
+          ./build.sh --release --compress --lite --skip-i18n
         env:
           CROWDIN_PROJECT_ID: ""
           CROWDIN_PERSONAL_TOKEN: ""
