@@ -73,7 +73,7 @@ jobs:
             ${{ steps.version.outputs.tag_name }} \
             dist/openlist-frontend-dist-v*-*.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
 permissions:
   contents: write
