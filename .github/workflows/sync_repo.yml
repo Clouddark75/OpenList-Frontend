@@ -28,11 +28,16 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          # Create a new branch
+          # Remove old orphan branch if exists
+          git branch -D new-main 2>/dev/null || true
           git checkout --orphan new-main
           git add .
           git commit -m "Sync from GitHub: $(date)"
 
           # Add Gitee remote and force push
-          git remote add gitee ${{ vars.GITEE_REPO_URL }}
+          git remote add gitee ${{ secrets.GITEE_REPO_URL }}
           git push --force gitee new-main:main
+
+          # Cleanup
+          git checkout main
+          git branch -D new-main
