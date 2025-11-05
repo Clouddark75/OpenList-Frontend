@@ -333,6 +333,8 @@
     "upload_api": "Upload api",
     "upload_thread": "Upload thread",
     "upload_thread-tips": "1\u003c=thread\u003c=32",
+    "use_dynamic_upload_api": "Use dynamic upload api",
+    "use_dynamic_upload_api-tips": "dynamically get upload api domain, when enabled, the 'Upload API' setting will be used as a fallback if failed to get",
     "use_online_api": "Use online api"
   },
   "BaiduPhoto": {
@@ -571,6 +573,8 @@
     "show_all_version-tips": "show all versions",
     "show_readme": "Show readme",
     "show_readme-tips": "show README、LICENSE file",
+    "show_source_code": "Show source code",
+    "show_source_code-tips": "show Source code (zip/tar.gz)",
     "token": "Token",
     "token-tips": "GitHub token, if you want to access private repositories or increase the rate limit"
   },
