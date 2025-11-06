@@ -10,41 +10,21 @@ const Copy = () => {
       type="copy"
       canRetry
       nameAnalyzer={{
-        // Regex mejorado para capturar correctamente copy y merge
+        // Regex original pero incluyendo merge
         regex:
-          /^(?:copy|merge) \[([^\]]*)\]\(([^)]*)\) to \[([^\]]*)\]\(([^)]*)\)$/,
+          /^(?:copy|merge) \[(.*\/([^\/]*))]\((.*\/([^\/]*))\) to \[(.+)]\((.+)\)$/,
         title: (matches) => {
-          // matches[1] = src storage mount path
-          // matches[2] = src actual path (path completo)
-          // matches[3] = dst storage mount path  
-          // matches[4] = dst actual path
+          // matches[4] = último segmento del src actual path
+          // matches[2] = último segmento del src storage mount path
           
-          const srcPath = matches[2]
-          
-          // Debug: ver qué estamos recibiendo
-          console.log('Task name matches:', matches)
-          console.log('Source path:', srcPath)
-          
-          // Extraer el último segmento del path (nombre del archivo/carpeta)
-          const lastSlashIndex = srcPath.lastIndexOf('/')
-          const fileName = lastSlashIndex >= 0 
-            ? srcPath.substring(lastSlashIndex + 1)
-            : srcPath
-          
-          console.log('Extracted fileName:', fileName)
-          
-          // Si el nombre está vacío, es raíz
-          if (fileName === "") {
-            return "/"
-          }
-          
-          return fileName
+          if (matches[4] !== "") return matches[4]
+          return matches[2] === "" ? "/" : matches[2]
         },
         attrs: {
           [t("tasks.attr.copy.src")]: (matches) =>
-            getPath(matches[1], matches[2]),
+            getPath(matches[1], matches[3]),
           [t("tasks.attr.copy.dst")]: (matches) =>
-            getPath(matches[3], matches[4]),
+            getPath(matches[5], matches[6]),
         },
       }}
     />
