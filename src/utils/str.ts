@@ -183,6 +183,12 @@ export const validateFilename = (
   if (!name || name.trim().length === 0) {
     return { valid: false, error: "empty_input" }
   }
+
+  // Si parece una URL con cualquier protocolo (http, https, ftp, magnet, etc.)
+  if (/^[a-z][a-z0-9+\-.]*:\/\//i.test(name) || /^[a-z][a-z0-9+\-.]*:[^\s]+$/i.test(name)) {
+    return { valid: true }
+  }
+
   const INVALID_CHARS = /[\/\\?<>*:|"]/
   if (INVALID_CHARS.test(name)) {
     return { valid: false, error: "invalid_filename_chars" }
