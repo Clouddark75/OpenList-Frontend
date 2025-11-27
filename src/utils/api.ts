@@ -196,7 +196,7 @@ export const fsArchiveDecompress = (
   name: string[],
   archive_pass = "",
   inner_path = "/",
-  cache_full = true,
+  cache_full = false,
   put_into_new_dir = false,
   overwrite = false,
 ): PEmptyResp => {
