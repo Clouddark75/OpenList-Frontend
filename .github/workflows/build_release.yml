@@ -67,56 +67,37 @@ jobs:
         with:
           run_install: false
 
-      - name: Import GPG key
-        if: github.event_name == 'workflow_dispatch'
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.BOT_GPG_PASSPHRASE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          git_tag_gpgsign: true
-
-      - name: Setup CI Bot
-        if: github.event_name == 'workflow_dispatch'
+      - name: Setup git identity (for fork)
         run: |
-          git config user.name "${{ secrets.BOT_USERNAME }}"
-          git config user.email "${{ secrets.BOT_USEREMAIL }}"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
       - name: Update package.json and commit
         if: github.event_name == 'workflow_dispatch'
         run: |
           jq --arg version "${{ steps.semver.outputs.version }}" '.version = $version' package.json > package.json.tmp && mv package.json.tmp package.json
           git add package.json
-          git commit -S -m "chore: release v${{ steps.semver.outputs.version }}" --no-verify
+          git commit -m "chore: release v${{ steps.semver.outputs.version }}" --no-verify || true
           git push
 
-          # For local build, needn't push, the tag will be created by `gh release create`
-          git tag -s "v${{ steps.semver.outputs.version }}" -m "Release v${{ steps.semver.outputs.version }}"
+          # Create annotated tag (no GPG)
+          git tag -a "v${{ steps.semver.outputs.version }}" -m "Release v${{ steps.semver.outputs.version }}"
 
       - name: Get current tag
         id: get_current_tag
         run: |
-          # Remove existing tag `rolling`, since `rolling` should always point to the latest commit
-          # This is necessary to avoid conflicts with the changelog generation
           git tag -d rolling 2>/dev/null || true
-
-          # Get the current tag
           CURRENT_TAG=$(git describe --tags --abbrev=0)
           echo "current_tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
 
-          # Temporarily remove all pre-release tags (tags containing '-' / '+')
-          # This prevents them from interfering with changelog generation
           PRE_RELEASE_TAGS=$(git tag -l | grep -E "(-|\+)" || true)
           if [ -n "$PRE_RELEASE_TAGS" ]; then
             echo "Temporarily removing pre-release tags: $PRE_RELEASE_TAGS"
             echo "$PRE_RELEASE_TAGS" | xargs -r git tag -d
           fi
 
-          # Add back the current tag if is a pre-release
-          # Should not add `-f`, as it will overwrite the existing tag
           if [[ "${{ steps.check_pre_release.outputs.is_pre_release }}" == "true" ]]; then
-            git tag -s "$CURRENT_TAG" -m "Release $CURRENT_TAG"
+            git tag -a "$CURRENT_TAG" -m "Release $CURRENT_TAG"
           fi
 
       - name: Generate changelog
@@ -127,10 +108,10 @@ jobs:
       - name: Build Release
         run: |
           chmod +x build.sh
-          ./build.sh --release --compress
+          ./build.sh --release --compress --skip-i18n
         env:
-          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
-          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          CROWDIN_PROJECT_ID: ""
+          CROWDIN_PERSONAL_TOKEN: ""
 
       - name: Move regular build
         run: |
@@ -140,10 +121,10 @@ jobs:
       - name: Build Lite Release
         run: |
           chmod +x build.sh
-          ./build.sh --release --compress --lite
+          ./build.sh --release --compress --lite --skip-i18n
         env:
-          CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
-          CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          CROWDIN_PROJECT_ID: ""
+          CROWDIN_PERSONAL_TOKEN: ""
 
       - name: Move lite build and restore regular build
         run: |
@@ -153,7 +134,6 @@ jobs:
 
       - name: Upload Release Assets
         run: |
-          # Delete local tag, or gh cli will complain about it.
           git tag -d ${{ steps.get_current_tag.outputs.current_tag }}
           gh release create \
             --title "Release ${{ steps.get_current_tag.outputs.current_tag }}" \
@@ -162,14 +142,12 @@ jobs:
             ${{ steps.get_current_tag.outputs.current_tag }} \
             dist/openlist-frontend-dist-v*.tar.gz lite-dist/openlist-frontend-dist-lite-v*.tar.gz dist/i18n.tar.gz
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Prepare for npm
         run: |
-          # Delete the generated dist tarball
           rm -f dist/openlist-frontend-dist-v*.tar.gz
           rm -f lite-dist/openlist-frontend-dist-lite-v*.tar.gz
-          # Copy the lite version
           mkdir dist/lite
           cp -r lite-dist/. dist/lite/
 
