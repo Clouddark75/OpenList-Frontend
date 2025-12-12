@@ -124,6 +124,14 @@ export const Copy = () => {
             checked={overwrite()}
             onChange={handleOverwriteChange}
           >
+            {t("home.conflict_policy.overwrite_existing")}
+          </Checkbox>
+          <Checkbox
+            mr="auto"
+            checked={skipExisting()}
+            onChange={handleSkipExistingChange}
+            disabled={overwrite() || merge()}
+          >
             {t("home.conflict_policy.skip_existing")}
           </Checkbox>
           <Checkbox
@@ -246,12 +254,4 @@ export const Move = () => {
       }}
     />
   )
-}.conflict_policy.overwrite_existing")}
-          </Checkbox>
-          <Checkbox
-            mr="auto"
-            checked={skipExisting()}
-            onChange={handleSkipExistingChange}
-            disabled={overwrite() || merge()}
-          >
-            {t("home
+}
