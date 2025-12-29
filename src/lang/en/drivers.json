@@ -219,12 +219,38 @@
     "download_concurrency-tips": "Need to enable proxy",
     "download_part_size": "Download part size",
     "download_part_size-tips": "Need to enable proxy. Unit: KB",
-    "parallel_write": "Parallel write",
+    "file_consistency_check": "File consistency check",
     "paths": "Paths",
-    "protect_same_name": "Protect same name",
-    "protect_same_name-tips": "Protects same-name files from Delete or Rename",
     "provider_pass_through": "Provider pass through",
-    "writable": "Writable"
+    "put_conflict_policy": "Put conflict policy",
+    "put_conflict_policy-tips": "How the driver handles identical backend paths when uploading, copying, moving, or decompressing.",
+    "put_conflict_policys": {
+      "all": "All",
+      "all_strict": "All strict",
+      "deterministic": "Deterministic",
+      "deterministic_or_all": "Deterministic or all",
+      "disabled": "Disabled",
+      "first": "First",
+      "quota": "Quota",
+      "quota_strict": "Quota strict",
+      "random": "Random"
+    },
+    "read_conflict_policy": "Read conflict policy",
+    "read_conflict_policys": {
+      "all": "All",
+      "first": "First",
+      "random": "Random"
+    },
+    "write_conflict_policy": "Write conflict policy",
+    "write_conflict_policy-tips": "How the driver handles identical backend paths when renaming, removing, or making directories.",
+    "write_conflict_policys": {
+      "all": "All",
+      "all_strict": "All strict",
+      "deterministic": "Deterministic",
+      "deterministic_or_all": "Deterministic or all",
+      "disabled": "Disabled",
+      "first": "First"
+    }
   },
   "Aliyundrive": {
     "internal_upload": "Internal upload",
