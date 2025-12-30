@@ -37,6 +37,8 @@
       "asc": "Asc",
       "desc": "Desc"
     },
+    "page_size": "Page size",
+    "page_size-tips": "list api per page size of 115open driver",
     "refresh_token": "Refresh token",
     "root_folder_id": "Root folder id"
   },
@@ -109,6 +111,9 @@
     "cloud_id": "Cloud id",
     "custom_upload_part_size": "Custom upload part size",
     "custom_upload_part_size-tips": "0 for auto",
+    "mail_cookies": "Mail cookies",
+    "mail_cookies-tips": "Cookies from mail.139.com used for login authentication.",
+    "password": "Password",
     "report_real_size": "Report real size",
     "report_real_size-tips": "Enable to report the real file size during upload",
     "root_folder_id": "Root folder id",
@@ -122,7 +127,8 @@
     "use_large_thumbnail": "Use large thumbnail",
     "use_large_thumbnail-tips": "Enable to use large thumbnail for images",
     "user_domain_id": "User domain id",
-    "user_domain_id-tips": "ud_id in Cookie, fill in to show disk usage"
+    "user_domain_id-tips": "ud_id in Cookie, fill in to show disk usage",
+    "username": "Username"
   },
   "189Cloud": {
     "cookie": "Cookie",
@@ -213,12 +219,38 @@
     "download_concurrency-tips": "Need to enable proxy",
     "download_part_size": "Download part size",
     "download_part_size-tips": "Need to enable proxy. Unit: KB",
-    "parallel_write": "Parallel write",
+    "file_consistency_check": "File consistency check",
     "paths": "Paths",
-    "protect_same_name": "Protect same name",
-    "protect_same_name-tips": "Protects same-name files from Delete or Rename",
     "provider_pass_through": "Provider pass through",
-    "writable": "Writable"
+    "put_conflict_policy": "Putting conflict policy",
+    "put_conflict_policy-tips": "How the driver handles identical backend paths when uploading, copying, moving, or decompressing.",
+    "put_conflict_policys": {
+      "all": "Put into all conflict paths",
+      "all_strict": "Allow full conflict paths",
+      "deterministic": "Allow unique path",
+      "deterministic_or_all": "Allow unique path and full conflict paths",
+      "disabled": "Disable putting",
+      "first": "Put into the first conflict path",
+      "quota": "Weighted random load balancing based on remaining space",
+      "quota_strict": "Strict weighted random load balancing based on remaining space",
+      "random": "Random load balancing"
+    },
+    "read_conflict_policy": "Reading conflict policy",
+    "read_conflict_policys": {
+      "all": "Load balancing on a per-part basis",
+      "first": "Get the file corresponding to the first conflict path",
+      "random": "Load balancing on a per-file basis"
+    },
+    "write_conflict_policy": "Writing conflict policy",
+    "write_conflict_policy-tips": "How the driver handles identical backend paths when renaming, removing, or making directories.",
+    "write_conflict_policys": {
+      "all": "Write into all conflict paths",
+      "all_strict": "Allow full conflict paths",
+      "deterministic": "Allow unique path",
+      "deterministic_or_all": "Allow unique path and full conflict paths",
+      "disabled": "Disable writing",
+      "first": "Write into the first conflict path"
+    }
   },
   "Aliyundrive": {
     "internal_upload": "Internal upload",
@@ -1013,6 +1045,13 @@
     "KeepLocalDownloadFile-tips": "keep local download files",
     "PathPrefix": "PathPrefix",
     "PathPrefix-tips": "Path prefix",
+    "SaveLocalMode": "SaveLocalMode",
+    "SaveLocalMode-tips": "save strm file locally mode",
+    "SaveLocalModes": {
+      "insert": "Insert",
+      "sync": "Sync",
+      "update": "Update"
+    },
     "SaveStrmLocalPath": "SaveStrmLocalPath",
     "SaveStrmLocalPath-tips": "save strm file local path",
     "SaveStrmToLocal": "SaveStrmToLocal",
@@ -1026,6 +1065,7 @@
     "paths": "Paths",
     "siteUrl": "SiteUrl",
     "siteUrl-tips": "The prefix URL of the strm file",
+    "withSign": "WithSign",
     "withoutUrl": "WithoutUrl",
     "withoutUrl-tips": "strm file content without URL prefix"
   },
@@ -1301,6 +1341,15 @@
     "num_folder": "Num folder",
     "root_folder_path": "Root folder path"
   },
+  "WPS": {
+    "cookie": "Cookie",
+    "mode": "Mode",
+    "modes": {
+      "Business": "Business",
+      "Personal": "Personal"
+    },
+    "root_folder_path": "Root folder path"
+  },
   "WebDav": {
     "address": "Address",
     "password": "Password",
@@ -1455,6 +1504,7 @@
     "USS": {},
     "UrlTree": {},
     "Virtual": {},
+    "WPS": {},
     "WebDav": {},
     "WeiYun": {},
     "WoPan": {},
@@ -1542,6 +1592,7 @@
     "USS": "USS",
     "UrlTree": "UrlTree",
     "Virtual": "Virtual",
+    "WPS": "WPS",
     "WebDav": "WebDav",
     "WeiYun": "WeiYun",
     "WoPan": "WoPan",
