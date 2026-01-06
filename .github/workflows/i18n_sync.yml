@@ -17,26 +17,25 @@ jobs:
     name: Generate and i18n files
     runs-on: ubuntu-latest
     steps:
+      - name: Setup go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.24"
+
       - name: Checkout frontend codes
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
           submodules: recursive
 
       - name: Checkout backend codes
-        uses: actions/checkout@v6
+        uses: actions/checkout@v5
         with:
           repository: ${{ vars.SYNC_LANG_ENV_BACKEND_REPOSITORY || 'OpenListTeam/OpenList' }}
           ref: main
           path: backend
           fetch-depth: 0
           submodules: recursive
-
-      - name: Setup go
-        uses: actions/setup-go@v6
-        with:
-          go-version: "1.25"
-          cache-dependency-path: backend/go.sum
 
       - name: Generate and update lang files
         run: |
@@ -57,38 +56,38 @@ jobs:
             echo "changed=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Import GPG key
-        if: steps.verify-changed-files.outputs.changed == 'true'
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.BOT_GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.BOT_GPG_PASSPHRASE }}
-          git_config_global: true
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          git_tag_gpgsign: true
-
-      - name: Setup CI Bot
+      - name: Setup git identity (fork-friendly)
         if: steps.verify-changed-files.outputs.changed == 'true'
         run: |
-          git config --global user.name "${{ secrets.BOT_USERNAME }}"
-          git config --global user.email "${{ secrets.BOT_USEREMAIL }}"
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
       - name: Commit the changes
         if: steps.verify-changed-files.outputs.changed == 'true'
         run: |
-          git commit -S -m "chore: auto update i18n file"
-          # Skip pushing if triggered by a pull request
+          git commit -m "chore: auto update i18n file" || echo "No changes to commit"
           if [ "${{ github.event_name }}" != "pull_request" ]; then
             git push
           fi
 
-      - name: Sync to Crowdin
-        if: ${{ steps.verify-changed-files.outputs.changed == 'true' || github.event_name == 'push' }}
-        uses: ./.github/actions/sync_to_crowdin
+      # Optional: Node setup if you plan to run scripts that depend on pnpm
+      - name: Setup Node
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: actions/setup-node@v4
         with:
-          crowdin_project_id: ${{ secrets.CROWDIN_PROJECT_ID }}
-          crowdin_personal_token: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+          node-version: "22"
+          registry-url: "https://registry.npmjs.org"
 
-permissions:
-  contents: write
+      - name: Install pnpm
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Install dependencies
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        run: pnpm install
+
+      - name: Skip Crowdin (fork)
+        if: steps.verify-changed-files.outputs.changed == 'true'
+        run: echo "Skipping Crowdin sync in fork"
