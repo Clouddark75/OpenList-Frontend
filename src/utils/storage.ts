@@ -5,9 +5,10 @@ export const showDiskUsage = (details?: MountDetails) => {
 }
 
 export const toReadableUsage = (details: MountDetails) => {
-  let total = details.total_space!
-  // Priorizar used_space si existe, sino calcularlo desde free_space
-  let used = details.used_space ?? (total - (details.free_space ?? 0))
+  if (!details.total_space || !details.free_space) return "0 / 0 MB"
+  
+  let total = details.total_space
+  let used = total - details.free_space
   
   // Convert to MB first
   const totalMB = total / (1024 * 1024)
@@ -26,12 +27,14 @@ export const toReadableUsage = (details: MountDetails) => {
 
 export const usedPercentage = (details: MountDetails) => {
   if (!details.total_space || details.total_space <= 0) return 0.0
+  if (!details.free_space) return 0.0
+  
   const total = details.total_space
-  const used = details.used_space ?? (total - (details.free_space ?? 0))
+  const used = total - details.free_space
   return used >= total ? 100.0 : (used / total) * 100.0
 }
 
 export const nearlyFull = (details: MountDetails) => {
-  const free = details.free_space ?? (details.total_space! - (details.used_space ?? 0))
-  return free / details.total_space! < 0.1
+  if (!details.total_space || !details.free_space) return false
+  return details.free_space / details.total_space < 0.1
 }
