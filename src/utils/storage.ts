@@ -7,20 +7,15 @@ export const showDiskUsage = (details?: MountDetails) => {
 export const toReadableUsage = (details: MountDetails) => {
   let total = details.total_space!
   let used = details.used_space!
-  
-  // Convert to MB first
-  const totalMB = total / (1024 * 1024)
-  const usedMB = used / (1024 * 1024)
-  
-  if (totalMB < 1024) {
-    // Display in MB for storage < 1GB
-    return `${Math.round(usedMB)} / ${Math.round(totalMB)} MB`
-  } else {
-    // Display in GB for storage >= 1GB
-    const totalGB = Math.round(totalMB / 1024)
-    const usedGB = Math.round(usedMB / 1024)
-    return `${usedGB} / ${totalGB} GB`
+  const units = ["B", "K", "M", "G", "T", "P", "E"]
+  const k = 1024
+  let unit_i = 0
+  while (unit_i < units.length - 1 && (used >= k || total >= k)) {
+    used /= k
+    total /= k
+    unit_i++
   }
+  return `${used.toFixed(2)} / ${total.toFixed(2)} ${units[unit_i]}`
 }
 
 export const usedPercentage = (details: MountDetails) => {
