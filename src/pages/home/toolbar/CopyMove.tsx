@@ -2,10 +2,9 @@ import { Checkbox, createDisclosure, VStack, Button } from "@hope-ui/solid"
 import { createSignal, onCleanup, onMount } from "solid-js"
 import { ModalFolderChoose, FolderTreeHandler } from "~/components"
 import { useFetch, usePath, useRouter, useT } from "~/hooks"
-import { me, selectedObjs } from "~/store"
+import { selectedObjs, userCan } from "~/store"
 import { bus, fsCopy, fsMove, handleRespWithNotifySuccess } from "~/utils"
 import { CgFolderAdd } from "solid-icons/cg"
-import { UserMethods, UserPermissions } from "~/types"
 
 // Claves para localStorage
 const STORAGE_KEY_OVERWRITE = "file-operation-overwrite"
@@ -24,7 +23,7 @@ const setStoredBoolean = (key: string, value: boolean): void => {
 }
 
 export const CreateFolderButton = (props: { handler?: FolderTreeHandler }) => {
-  if (!UserMethods.can(me(), UserPermissions.indexOf("write"))) {
+  if (!userCan("write_content")) {
     return null
   }
   const t = useT()
