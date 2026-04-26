@@ -1,5 +1,5 @@
 import axios from "axios"
-import { api, log } from "."
+import { api, log, bus } from "."
 
 const instance = axios.create({
   baseURL: api + "/api",
@@ -35,9 +35,7 @@ instance.interceptors.response.use(
     console.error(error) // for debug
     const code = axios.isCancel(error) ? -1 : error.response?.status
     if (code === 401) {
-      window.location.href = `/@login?redirect=${encodeURIComponent(
-        window.location.pathname
-      )}`
+      bus.emit("to", `/@login?redirect=${encodeURIComponent(window.location.pathname)}`)
     }
     return {
       code,
