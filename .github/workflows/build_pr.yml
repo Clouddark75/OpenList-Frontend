@@ -22,9 +22,9 @@ jobs:
         with:
           node-version: "24.14.1"
           registry-url: "https://registry.npmjs.org"
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        id: pnpm-install
         with:
           run_install: false
 
@@ -43,9 +43,6 @@ jobs:
         env:
           CROWDIN_PROJECT_ID: ""
           CROWDIN_PERSONAL_TOKEN: ""
-          OPENLIST_FRONTEND_BUILD_MODE: dev
-          OPENLIST_FRONTEND_BUILD_COMPRESS: false
-
       - name: Upload Build Artifacts
         uses: actions/upload-artifact@v7
         with:
