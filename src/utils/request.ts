@@ -34,7 +34,8 @@ instance.interceptors.response.use(
     // response error
     console.error(error) // for debug
     const code = axios.isCancel(error) ? -1 : error.response?.status
-    if (code === 401) {
+    const url = error.config?.url ?? ""
+    if (code === 401 && !url.startsWith("/public/")) {
       bus.emit("to", `/@login?redirect=${encodeURIComponent(window.location.pathname)}`)
     }
     return {
