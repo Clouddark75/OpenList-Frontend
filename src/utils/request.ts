@@ -33,13 +33,14 @@ instance.interceptors.response.use(
   (error) => {
     // response error
     console.error(error) // for debug
-    // notificationService.show({
-    //   status: "danger",
-    //   title: error.code,
-    //   description: error.message,
-    // });
+    const code = axios.isCancel(error) ? -1 : error.response?.status
+    if (code === 401) {
+      window.location.href = `/@login?redirect=${encodeURIComponent(
+        window.location.pathname
+      )}`
+    }
     return {
-      code: axios.isCancel(error) ? -1 : error.response?.status,
+      code,
       message: error.message,
     }
   },
