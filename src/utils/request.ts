@@ -1,5 +1,5 @@
 import axios from "axios"
-import { api, log, bus } from "."
+import { api, log } from "."
 
 const instance = axios.create({
   baseURL: api + "/api",
@@ -33,13 +33,13 @@ instance.interceptors.response.use(
   (error) => {
     // response error
     console.error(error) // for debug
-    const code = axios.isCancel(error) ? -1 : error.response?.status
-    const url = error.config?.url ?? ""
-    if (code === 401 && !url.startsWith("/public/")) {
-      bus.emit("to", `/@login?redirect=${encodeURIComponent(window.location.pathname)}`)
-    }
+    // notificationService.show({
+    //   status: "danger",
+    //   title: error.code,
+    //   description: error.message,
+    // });
     return {
-      code,
+      code: axios.isCancel(error) ? -1 : error.response?.status,
       message: error.message,
     }
   },
