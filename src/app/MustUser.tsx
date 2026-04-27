@@ -10,8 +10,13 @@ const MustUser = (props: { children: JSXElement }) => {
   const [loading, data] = useFetch((): PResp<Me> => r.get("/me"))
   const [err, setErr] = createSignal<string>()
   ;(async () => {
-    // const resp: Resp<User> = await data();
-    handleResp(await data(), setMe, setErr)
+    handleResp(await data(), setMe, (msg, code) => {
+      if (code !== 401) {
+        setErr(msg)
+      }
+      // 401 is handled by handleResp itself via bus.emit("to", "/@login")
+      // we intentionally don't call setErr so loading stays true while navigating
+    })
   })()
   return (
     <Switch fallback={props.children}>
