@@ -14,7 +14,7 @@ import {
 } from "@hope-ui/solid"
 import { createMemo, createSignal, Show, onMount, onCleanup } from "solid-js"
 import { SwitchColorMode, SwitchLanguageWhite } from "~/components"
-import { useFetch, useT, useTitle, useRouter } from "~/hooks"
+import { useFetch, useLoading, useT, useTitle, useRouter } from "~/hooks"
 import {
   changeToken,
   r,
@@ -57,7 +57,7 @@ const Login = () => {
   const [useauthn, setuseauthn] = createSignal(false)
   const [remember, setRemember] = createStorageSignal("remember-pwd", "false")
   const [useLdap, setUseLdap] = createSignal(false)
-  const [loading, data] = useFetch(
+  const [loading, data] = useLoading(
     async (): Promise<Resp<{ token: string }>> => {
       if (useLdap()) {
         return r.post("/auth/login/ldap", {
@@ -190,7 +190,7 @@ const Login = () => {
         localStorage.removeItem("password")
       }
       const resp = await data()
-      handleRespWithoutNotify(
+      handleRespWithoutAuthAndNotify(
         resp,
         (data) => {
           notify.success(t("login.success"))
