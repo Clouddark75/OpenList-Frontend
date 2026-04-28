@@ -14,11 +14,12 @@ import {
 } from "@hope-ui/solid"
 import { createMemo, createSignal, Show, onMount, onCleanup } from "solid-js"
 import { SwitchColorMode, SwitchLanguageWhite } from "~/components"
-import { useFetch, useT, useTitle, useRouter } from "~/hooks"
+import { useFetch, useLoading, useT, useTitle, useRouter } from "~/hooks"
 import {
   changeToken,
   r,
   notify,
+  handleRespWithoutNotify,
   handleRespWithoutAuthAndNotify,
   base_path,
   handleResp,
@@ -57,7 +58,7 @@ const Login = () => {
   const [useauthn, setuseauthn] = createSignal(false)
   const [remember, setRemember] = createStorageSignal("remember-pwd", "false")
   const [useLdap, setUseLdap] = createSignal(false)
-  const [loading, data] = useFetch(
+  const [loading, data] = useLoading(
     async (): Promise<Resp<{ token: string }>> => {
       if (useLdap()) {
         return r.post("/auth/login/ldap", {
@@ -154,20 +155,14 @@ const Login = () => {
           username_login,
           controller.signal,
         )
-        handleRespWithoutAuthAndNotify(
-          resp,
-          (data) => {
-            notify.success(t("login.success"))
-            changeToken(data.token)
-            to(
-              decodeURIComponent(searchParams.redirect || base_path || "/"),
-              true,
-            )
-          },
-          (msg) => {
-            notify.error(msg)
-          },
-        )
+        handleRespWithoutNotify(resp, (data) => {
+          notify.success(t("login.success"))
+          changeToken(data.token)
+          to(
+            decodeURIComponent(searchParams.redirect || base_path || "/"),
+            true,
+          )
+        })
       } catch (error: unknown) {
         if (error instanceof Error && error.name != "AbortError")
           notify.error(error.message)
