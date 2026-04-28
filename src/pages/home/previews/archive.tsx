@@ -21,7 +21,6 @@ import {
   Show,
   Switch,
   Suspense,
-  onCleanup,
 } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import {
@@ -31,7 +30,6 @@ import {
   OrderBy,
   password,
   objStore,
-  ObjStore,
 } from "~/store"
 import {
   Obj,
@@ -261,6 +259,7 @@ const Preview = () => {
   )
   const [selectedFile, setSelectedFile] = createSignal<string>("")
   const [selectedPreviewKey, setSelectedPreviewKey] = createSignal("")
+  const [innerRawUrl, setInnerRawUrl] = createSignal("")
   const getObjsMutex = createMutex()
   const toList = (tree: ObjTree[] | Obj[]): List => {
     let l: List = {}
@@ -395,7 +394,7 @@ const Preview = () => {
     const innerPath =
       innerPaths().length > 0 ? "/" + innerPaths().join("/") : ""
 
-    return { ...obj, sign: sign, inner_path: innerPath, archive: originalObj }
+    return { ...obj, sign: sign, inner_path: innerPath, archive: { ...objStore.obj, inner_path: undefined, archive: undefined } as ArchiveObj }
   }
 
   const sortObjs = (orderBy: OrderBy, reverse?: boolean) => {
@@ -432,39 +431,18 @@ const Preview = () => {
     return p[0]
   })
 
-  // Cast to ArchiveObj to make sure onCleanup can delete archive property correctly
-  const originalObj: ArchiveObj = {
-    ...objStore.obj,
-    inner_path: undefined,
-    archive: undefined,
-  }
-  const originalRawUrl = objStore.raw_url
-
   const changeFile = (name: string) => {
-    batch(() => {
-      if (name === "") {
-        // Restore
-        ObjStore.setObj(originalObj)
-        ObjStore.setRawUrl(originalRawUrl)
-        setSelectedFile("")
-      } else {
-        // Set new
-        const file = files().find((f) => f.name === name)
-        if (file) {
-          const innerUrl = rawLink(file)
-          ObjStore.setObj(file)
-          ObjStore.setRawUrl(innerUrl)
-          setSelectedFile(name)
-        }
+    if (name === "") {
+      setSelectedFile("")
+      setInnerRawUrl("")
+    } else {
+      const file = files().find((f) => f.name === name)
+      if (file) {
+        setInnerRawUrl(rawLink(file))
+        setSelectedFile(name)
       }
-    })
+    }
   }
-
-  onCleanup(() => {
-    // Restore original values
-    ObjStore.setObj(originalObj)
-    ObjStore.setRawUrl(originalRawUrl)
-  })
 
   createEffect(() => {
     selectedFile()
@@ -585,8 +563,8 @@ const Preview = () => {
                   <OpenWith
                     file={{
                       name: selectedFile(),
-                      raw_url: objStore.raw_url,
-                      d_url: objStore.raw_url,
+                      raw_url: innerRawUrl(),
+                      d_url: innerRawUrl(),
                     }}
                   />
                 </HStack>
