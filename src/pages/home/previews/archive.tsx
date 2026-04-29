@@ -438,13 +438,19 @@ const Preview = () => {
 
   const changeFile = (name: string) => {
     if (name === "") {
-      batch(() => {
-        ObjStore.setIsInnerPreview(false)
-        ObjStore.setObj(originalObj)
-        ObjStore.setRawUrl(originalRawUrl)
+      // Only restore objStore if we actually had a file selected
+      if (selectedFile()) {
+        batch(() => {
+          ObjStore.setIsInnerPreview(false)
+          ObjStore.setObj(originalObj)
+          ObjStore.setRawUrl(originalRawUrl)
+          setSelectedFile("")
+          setInnerRawUrl("")
+        })
+      } else {
         setSelectedFile("")
         setInnerRawUrl("")
-      })
+      }
     } else {
       const file = files().find((f) => f.name === name)
       if (file) {
