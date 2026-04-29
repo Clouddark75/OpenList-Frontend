@@ -18,7 +18,6 @@ import {
   createSignal,
   For,
   Match,
-  onCleanup,
   Show,
   Switch,
   Suspense,
@@ -31,8 +30,8 @@ import {
   OrderBy,
   password,
   objStore,
-  ObjStore,
 } from "~/store"
+import { InnerPreviewContext } from "~/utils/innerPreviewContext"
 import {
   Obj,
   ObjTree,
@@ -262,6 +261,9 @@ const Preview = () => {
   const [selectedFile, setSelectedFile] = createSignal<string>("")
   const [selectedPreviewKey, setSelectedPreviewKey] = createSignal("")
   const [innerRawUrl, setInnerRawUrl] = createSignal("")
+  const [innerPreviewCtx, setInnerPreviewCtx] = createSignal<
+    { obj: ArchiveObj; rawUrl: string } | undefined
+  >(undefined)
   const getObjsMutex = createMutex()
   const toList = (tree: ObjTree[] | Obj[]): List => {
     let l: List = {}
@@ -433,47 +435,26 @@ const Preview = () => {
     return p[0]
   })
 
-  const originalObj = { ...objStore.obj }
-  const originalRawUrl = objStore.raw_url
-
   const changeFile = (name: string) => {
     if (name === "") {
-      // Only restore objStore if we actually had a file selected
-      if (selectedFile()) {
-        batch(() => {
-          ObjStore.setIsInnerPreview(false)
-          ObjStore.setObj(originalObj)
-          ObjStore.setRawUrl(originalRawUrl)
-          setSelectedFile("")
-          setInnerRawUrl("")
-        })
-      } else {
+      batch(() => {
+        setInnerPreviewCtx(undefined)
         setSelectedFile("")
         setInnerRawUrl("")
-      }
+      })
     } else {
       const file = files().find((f) => f.name === name)
       if (file) {
         const innerObj = buildObjWithInner(file)
         const url = rawLink(innerObj)
         batch(() => {
-          ObjStore.setIsInnerPreview(true)
-          ObjStore.setObj(innerObj)
-          ObjStore.setRawUrl(url)
+          setInnerPreviewCtx({ obj: innerObj, rawUrl: url })
           setInnerRawUrl(url)
           setSelectedFile(name)
         })
       }
     }
   }
-
-  onCleanup(() => {
-    batch(() => {
-      ObjStore.setIsInnerPreview(false)
-      ObjStore.setObj(originalObj)
-      ObjStore.setRawUrl(originalRawUrl)
-    })
-  })
 
   createEffect(() => {
     selectedFile()
@@ -571,13 +552,15 @@ const Preview = () => {
               <VStack w="$full" spacing="$2" alignItems="center">
                 <Show when={currentPreview()}>
                   <Suspense fallback={<FullLoading />}>
-                    <Dynamic
-                      component={currentPreview()?.component}
-                      images={files().filter((f) => f.type === ObjType.IMAGE)}
-                      navigate={(name) => {
-                        changeFile(name)
-                      }}
-                    />
+                    <InnerPreviewContext.Provider value={innerPreviewCtx()}>
+                      <Dynamic
+                        component={currentPreview()?.component}
+                        images={files().filter((f) => f.type === ObjType.IMAGE)}
+                        navigate={(name) => {
+                          changeFile(name)
+                        }}
+                      />
+                    </InnerPreviewContext.Provider>
                   </Suspense>
                 </Show>
                 <HStack w="$full" justifyContent="center" spacing="$2" p="$2">
