@@ -1,4 +1,5 @@
 import { objStore, selectedObjs, State, me } from "~/store"
+import { useInnerPreview } from "~/utils/innerPreviewContext"
 import { Obj, ArchiveObj } from "~/types"
 import {
   base_path,
@@ -79,6 +80,8 @@ export const useLink = () => {
       return getLinkByObj(obj, "preview", encodeAll)
     },
     currentObjLink: (encodeAll?: boolean) => {
+      const innerPreview = useInnerPreview()
+      if (innerPreview) return innerPreview.rawUrl
       return rawLink(objStore.obj, encodeAll)
     },
   }
