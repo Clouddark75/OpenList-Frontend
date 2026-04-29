@@ -438,7 +438,7 @@ const Preview = () => {
     } else {
       const file = files().find((f) => f.name === name)
       if (file) {
-        setInnerRawUrl(rawLink(file))
+        setInnerRawUrl(rawLink(buildObjWithInner(file)))
         setSelectedFile(name)
       }
     }
