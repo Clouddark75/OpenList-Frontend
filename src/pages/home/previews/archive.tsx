@@ -438,29 +438,35 @@ const Preview = () => {
 
   const changeFile = (name: string) => {
     if (name === "") {
-      ObjStore.setIsInnerPreview(false)
-      ObjStore.setObj(originalObj)
-      ObjStore.setRawUrl(originalRawUrl)
-      setSelectedFile("")
-      setInnerRawUrl("")
+      batch(() => {
+        ObjStore.setIsInnerPreview(false)
+        ObjStore.setObj(originalObj)
+        ObjStore.setRawUrl(originalRawUrl)
+        setSelectedFile("")
+        setInnerRawUrl("")
+      })
     } else {
       const file = files().find((f) => f.name === name)
       if (file) {
         const innerObj = buildObjWithInner(file)
         const url = rawLink(innerObj)
-        ObjStore.setIsInnerPreview(true)
-        ObjStore.setObj(innerObj)
-        ObjStore.setRawUrl(url)
-        setInnerRawUrl(url)
-        setSelectedFile(name)
+        batch(() => {
+          ObjStore.setIsInnerPreview(true)
+          ObjStore.setObj(innerObj)
+          ObjStore.setRawUrl(url)
+          setInnerRawUrl(url)
+          setSelectedFile(name)
+        })
       }
     }
   }
 
   onCleanup(() => {
-    ObjStore.setIsInnerPreview(false)
-    ObjStore.setObj(originalObj)
-    ObjStore.setRawUrl(originalRawUrl)
+    batch(() => {
+      ObjStore.setIsInnerPreview(false)
+      ObjStore.setObj(originalObj)
+      ObjStore.setRawUrl(originalRawUrl)
+    })
   })
 
   createEffect(() => {
