@@ -18,6 +18,7 @@ import {
   createSignal,
   For,
   Match,
+  onCleanup,
   Show,
   Switch,
   Suspense,
@@ -30,6 +31,7 @@ import {
   OrderBy,
   password,
   objStore,
+  ObjStore,
 } from "~/store"
 import {
   Obj,
@@ -431,18 +433,27 @@ const Preview = () => {
     return p[0]
   })
 
+  const originalRawUrl = objStore.raw_url
+
   const changeFile = (name: string) => {
     if (name === "") {
+      ObjStore.setRawUrl(originalRawUrl)
       setSelectedFile("")
       setInnerRawUrl("")
     } else {
       const file = files().find((f) => f.name === name)
       if (file) {
-        setInnerRawUrl(rawLink(buildObjWithInner(file)))
+        const url = rawLink(buildObjWithInner(file))
+        ObjStore.setRawUrl(url)
+        setInnerRawUrl(url)
         setSelectedFile(name)
       }
     }
   }
+
+  onCleanup(() => {
+    ObjStore.setRawUrl(originalRawUrl)
+  })
 
   createEffect(() => {
     selectedFile()
