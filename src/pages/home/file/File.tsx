@@ -16,8 +16,10 @@ const File = () => {
   let frozenPreviews: ReturnType<typeof getPreviews> | undefined
   const previews = createMemo(() => {
     if (objStore.isInnerPreview) {
+      // Freeze: don't recompute while showing an inner file preview
       return frozenPreviews ?? getPreviews({ ...objStore.obj, provider: objStore.provider })
     }
+    // Not in inner preview: always recompute fresh for the current file
     frozenPreviews = getPreviews({ ...objStore.obj, provider: objStore.provider })
     return frozenPreviews
   })
