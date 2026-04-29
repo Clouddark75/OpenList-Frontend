@@ -1,6 +1,7 @@
 import copy from "copy-to-clipboard"
 import { createResource } from "solid-js"
 import { getHideFiles, objStore } from "~/store"
+import { useInnerPreview } from "~/utils/innerPreviewContext"
 import { Obj } from "~/types"
 import { decodeText, fetchText, notify, pathJoin } from "~/utils"
 import { useT, useLink, useRouter } from "."
@@ -36,8 +37,10 @@ export const useUtil = () => {
 
 export function useFetchText() {
   const { proxyLink } = useLink()
+  const innerPreview = useInnerPreview()
   const fetchContent = async () => {
-    let fileurl = proxyLink(objStore.obj, true)
+    const obj = innerPreview?.obj ?? objStore.obj
+    let fileurl = innerPreview?.rawUrl ?? proxyLink(obj, true)
     return fetchText(fileurl)
   }
   return createResource("", fetchContent)
