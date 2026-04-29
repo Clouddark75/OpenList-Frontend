@@ -433,17 +433,23 @@ const Preview = () => {
     return p[0]
   })
 
+  const originalObj = { ...objStore.obj }
   const originalRawUrl = objStore.raw_url
 
   const changeFile = (name: string) => {
     if (name === "") {
+      ObjStore.setIsInnerPreview(false)
+      ObjStore.setObj(originalObj)
       ObjStore.setRawUrl(originalRawUrl)
       setSelectedFile("")
       setInnerRawUrl("")
     } else {
       const file = files().find((f) => f.name === name)
       if (file) {
-        const url = rawLink(buildObjWithInner(file))
+        const innerObj = buildObjWithInner(file)
+        const url = rawLink(innerObj)
+        ObjStore.setIsInnerPreview(true)
+        ObjStore.setObj(innerObj)
         ObjStore.setRawUrl(url)
         setInnerRawUrl(url)
         setSelectedFile(name)
@@ -452,6 +458,8 @@ const Preview = () => {
   }
 
   onCleanup(() => {
+    ObjStore.setIsInnerPreview(false)
+    ObjStore.setObj(originalObj)
     ObjStore.setRawUrl(originalRawUrl)
   })
 
