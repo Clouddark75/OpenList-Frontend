@@ -10,8 +10,16 @@ import { getPreviews } from "../previews"
 
 const File = () => {
   const { searchParams, setSearchParams } = useRouter()
+  // Capture previews once for the current file and freeze them while an inner
+  // preview is active. This prevents File.tsx from remounting the archive
+  // preview component when archive.tsx mutates objStore.obj for inner files.
+  let frozenPreviews: ReturnType<typeof getPreviews> | undefined
   const previews = createMemo(() => {
-    return getPreviews({ ...objStore.obj, provider: objStore.provider })
+    if (objStore.isInnerPreview) {
+      return frozenPreviews ?? getPreviews({ ...objStore.obj, provider: objStore.provider })
+    }
+    frozenPreviews = getPreviews({ ...objStore.obj, provider: objStore.provider })
+    return frozenPreviews
   })
   const selectedPreviewKey = createMemo(() => searchParams["preview"] || "")
   const cur = createMemo(() => {
