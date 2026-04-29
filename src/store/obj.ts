@@ -31,6 +31,7 @@ const initialObjStore = {
   direct_upload_tools: <string[] | undefined>undefined,
   state: State.Initial,
   err: "",
+  isInnerPreview: false,
 }
 const [objStore, setObjStore] = createStore<
   typeof initialObjStore & {
@@ -83,6 +84,7 @@ export const ObjStore = {
   setDirectUploadTools: (tools?: string[]) =>
     setObjStore("direct_upload_tools", tools),
   setErr: (err: string) => setObjStore("err", err),
+  setIsInnerPreview: (v: boolean) => setObjStore("isInnerPreview", v),
 }
 
 export type OrderBy = "name" | "size" | "modified"
