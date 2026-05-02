@@ -5,7 +5,7 @@ import { MonacoEditorLoader } from "~/components/MonacoEditor"
 import { useFetch, useFetchText, useParseText, useRouter, useT } from "~/hooks"
 import { objStore, userCan } from "~/store"
 import { PEmptyResp } from "~/types"
-import { handleResp, notify, r } from "~/utils"
+import { handleResp, notify, r, usePreviewObj } from "~/utils"
 import { createShortcut } from "@solid-primitives/keyboard"
 
 function Editor(props: { data?: string | ArrayBuffer; contentType?: string }) {
@@ -18,6 +18,7 @@ function Editor(props: { data?: string | ArrayBuffer; contentType?: string }) {
   const [encoding, setEncoding] = createSignal("utf-8")
   const [value, setValue] = createSignal(text(encoding()))
   const t = useT()
+  const store = usePreviewObj()
   const [loading, save] = useFetch(
     (): PEmptyResp =>
       r.put("/fs/put", value(), {
@@ -54,7 +55,7 @@ function Editor(props: { data?: string | ArrayBuffer; contentType?: string }) {
       <MonacoEditorLoader
         value={text(encoding())}
         theme={theme()}
-        path={objStore.obj.name}
+        path={store.obj.name}
         onChange={(value) => {
           setValue(value)
         }}
