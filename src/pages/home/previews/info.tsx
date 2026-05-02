@@ -1,10 +1,11 @@
 import { Heading, Icon, Image, Text, VStack } from "@hope-ui/solid"
 import { JSXElement } from "solid-js"
-import { getMainColor, objStore } from "~/store"
-import { formatDate, getFileSize } from "~/utils"
+import { getMainColor } from "~/store"
+import { formatDate, getFileSize, usePreviewObj } from "~/utils"
 import { getIconByObj } from "~/utils/icon"
 
 export const FileInfo = (props: { children: JSXElement }) => {
+  const store = usePreviewObj()
   return (
     <VStack class="fileinfo" py="$6" spacing="$6">
       <Image
@@ -13,10 +14,10 @@ export const FileInfo = (props: { children: JSXElement }) => {
           <Icon
             color={getMainColor()}
             boxSize="$20"
-            as={getIconByObj(objStore.obj)}
+            as={getIconByObj(store.obj)}
           />
         }
-        src={objStore.obj.thumb}
+        src={store.obj.thumb}
       />
       <VStack spacing="$2">
         <Heading
@@ -25,10 +26,10 @@ export const FileInfo = (props: { children: JSXElement }) => {
             wordBreak: "break-all",
           }}
         >
-          {objStore.obj.name}
+          {store.obj.name}
         </Heading>
         <Text color="$neutral10" size="sm">
-          {getFileSize(objStore.obj.size)} · {formatDate(objStore.obj.modified)}
+          {getFileSize(store.obj.size)} · {formatDate(store.obj.modified)}
         </Text>
       </VStack>
       <VStack spacing="$2">{props.children}</VStack>
