@@ -8,14 +8,15 @@ import {
 } from "@hope-ui/solid"
 import { createMemo, For, Show } from "solid-js"
 import { useLink, useT } from "~/hooks"
-import { getExternalPreviews, objStore } from "~/store"
+import { getExternalPreviews } from "~/store"
 import { FaSolidAngleDown } from "solid-icons/fa"
-import { convertURL } from "~/utils"
+import { convertURL, usePreviewObj } from "~/utils"
 
 export const OpenWith = () => {
   const t = useT()
+  const store = usePreviewObj()
   const previews = createMemo(() => {
-    return getExternalPreviews(objStore.obj.name)
+    return getExternalPreviews(store.obj.name)
   })
   const { currentObjLink } = useLink()
   return (
@@ -35,9 +36,9 @@ export const OpenWith = () => {
                 as="a"
                 target="_blank"
                 href={convertURL(preview.value, {
-                  raw_url: objStore.raw_url,
-                  name: objStore.obj.name,
-                  d_url: currentObjLink(true),
+                  raw_url: store.raw_url,
+                  name: store.obj.name,
+                  d_url: store.raw_url,
                 })}
               >
                 {preview.key}
