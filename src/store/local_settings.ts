@@ -38,7 +38,7 @@ export const initialLocalSettings = [
   },
   {
     key: "show_count_msg",
-    default: "none",
+    default: "visible",
     type: "select",
     options: ["none", "visible"],
   },
