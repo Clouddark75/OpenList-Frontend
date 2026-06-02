@@ -7,7 +7,7 @@
     "url": "https://github.com/OpenListTeam"
   },
   "description": "A new AList Fork to Anti Trust Crisis",
-  "packageManager": "pnpm@11.2.2",
+  "packageManager": "pnpm@11.4.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/OpenListTeam/OpenList-Frontend.git"
@@ -40,14 +40,14 @@
     "@types/bencode": "^2.0.4",
     "@types/crypto-js": "^4.2.2",
     "@types/mark.js": "^8.11.12",
-    "@types/node": "^24.12.2",
+    "@types/node": "^24.12.4",
     "@types/qrcode": "^1.5.6",
     "@types/sha256": "^0.2.2",
     "@types/streamsaver": "^2.0.5",
     "@vitejs/plugin-legacy": "^8.0.2",
     "cross-env": "^10.1.0",
     "husky": "^9.1.7",
-    "lint-staged": "^16.4.0",
+    "lint-staged": "^17.0.5",
     "mermaid": "^11.15.0",
     "prettier": "3.8.3",
     "rehype-stringify": "^10.0.1",
@@ -63,7 +63,7 @@
   },
   "dependencies": {
     "@egjs/view360": "4.0.0-beta.7",
-    "@embedpdf/snippet": "^2.14.2",
+    "@embedpdf/snippet": "^2.14.3",
     "@hope-ui/solid": "github:OpenListTeam/hope-ui#31b436e36ae5d266016814ba71a442ffa9d91181",
     "@jellyfin/libass-wasm": "^4.2.4",
     "@monaco-editor/loader": "1.7.0",
@@ -78,7 +78,7 @@
     "artplayer": "^5.4.0",
     "artplayer-plugin-danmuku": "^5.3.0",
     "asciinema-player": "^3.15.1",
-    "axios": "^1.15.2",
+    "axios": "^1.16.1",
     "bencode": "^4.0.0",
     "chardet": "^2.1.1",
     "clsx": "^2.1.1",
