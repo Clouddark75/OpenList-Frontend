@@ -37,6 +37,12 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
+      - name: Setup go
+        uses: actions/setup-go@v6
+        with:
+          go-version: "1.26.4"
+          cache-dependency-path: backend/go.sum
+
       - name: Generate and update lang files
         run: |
           cd backend
