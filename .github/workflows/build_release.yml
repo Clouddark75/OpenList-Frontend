@@ -103,7 +103,26 @@ jobs:
       - name: Generate changelog
         id: generate_changelog
         run: |
-          npx changelogithub --output ${{ github.workspace }}-CHANGELOG.txt || echo "" > ${{ github.workspace }}-CHANGELOG.txt
+          CHANGELOG="${{ github.workspace }}-CHANGELOG.txt"
+
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${{ steps.get_current_tag.outputs.current_tag }}^" 2>/dev/null || true)
+
+          if [ -n "$PREVIOUS_TAG" ]; then
+            echo "Generating changelog from $PREVIOUS_TAG to ${{ steps.get_current_tag.outputs.current_tag }}"
+            git log \
+              --pretty=format:"- %s (%h)" \
+              "$PREVIOUS_TAG..${{ steps.get_current_tag.outputs.current_tag }}" \
+              > "$CHANGELOG"
+          else
+            echo "No previous tag found. Using full history."
+            git log \
+              --pretty=format:"- %s (%h)" \
+              > "$CHANGELOG"
+          fi
+
+          if [ ! -s "$CHANGELOG" ]; then
+            echo "No changes." > "$CHANGELOG"
+          fi
 
       - name: Build Release
         run: |
