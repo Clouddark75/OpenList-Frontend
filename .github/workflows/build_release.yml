@@ -26,8 +26,8 @@ on:
   workflow_dispatch:
     inputs:
       version:
-     description: |
-        Target version (e.g., 1.0.0), will create a tag named 'v<version>' and update package.json version
+        description: |
+          Target version (e.g., 1.0.0), will create a tag named 'v<version>' and update package.json version
         required: true
         type: string
 
