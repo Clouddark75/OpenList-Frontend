@@ -22,18 +22,19 @@ on:
   push:
     tags:
       - "v[0-9]+.[0-9]+.[0-9]+*"
+
   workflow_dispatch:
     inputs:
       version:
-        description: |
-          Target version (e.g., 1.0.0), will create a tag named 'v<version>' and update package.json version
+     description: |
+        Target version (e.g., 1.0.0), will create a tag named 'v<version>' and update package.json version
         required: true
         type: string
 
 jobs:
   release:
-    name: Release
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -41,13 +42,13 @@ jobs:
           fetch-depth: 0
           submodules: recursive
 
-      - name: Validate and trim semver
+      - name: Validate semver
         id: semver
         uses: matt-usurp/validate-semver@v3.0.0
         with:
           version: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.version || github.ref_name }}
 
-      - name: Check if version is pre-release
+      - name: Check pre-release
         id: check_pre_release
         run: |
           if [[ -z "${{ steps.semver.outputs.prerelease }}" && -z "${{ steps.semver.outputs.build }}" ]]; then
@@ -56,138 +57,99 @@ jobs:
             echo "is_pre_release=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Setup Node
+      - name: Setup Node (build only)
         uses: actions/setup-node@v6
         with:
           node-version: "24.16.0"
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
         with:
           run_install: false
 
-      - name: Setup git identity (for fork)
+      - name: Setup git identity
         run: |
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-      - name: Update package.json and commit
+      # Only for manual release
+      - name: Update package.json and create tag
         if: github.event_name == 'workflow_dispatch'
         run: |
-          jq --arg version "${{ steps.semver.outputs.version }}" '.version = $version' package.json > package.json.tmp && mv package.json.tmp package.json
-          git add package.json
-          git commit -m "chore: release v${{ steps.semver.outputs.version }}" --no-verify || true
-          git push
+          VERSION="${{ steps.semver.outputs.version }}"
 
-          # Create annotated tag (no GPG)
-          git tag -a "v${{ steps.semver.outputs.version }}" -m "Release v${{ steps.semver.outputs.version }}"
+          jq --arg v "$VERSION" '.version = $v' package.json > tmp.json && mv tmp.json package.json
+
+          git add package.json
+          git commit -m "chore: release v$VERSION" || true
+
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+
+          git push origin HEAD --follow-tags
 
       - name: Get current tag
-        id: get_current_tag
+        id: get_tag
         run: |
-          git tag -d rolling 2>/dev/null || true
-          CURRENT_TAG=$(git describe --tags --abbrev=0)
-          echo "current_tag=$CURRENT_TAG" >> $GITHUB_OUTPUT
+          TAG=$(git describe --tags --abbrev=0)
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
 
-          PRE_RELEASE_TAGS=$(git tag -l | grep -E "(-|\+)" || true)
-          if [ -n "$PRE_RELEASE_TAGS" ]; then
-            echo "Temporarily removing pre-release tags: $PRE_RELEASE_TAGS"
-            echo "$PRE_RELEASE_TAGS" | xargs -r git tag -d
-          fi
-
-          if [[ "${{ steps.check_pre_release.outputs.is_pre_release }}" == "true" ]]; then
-            git tag -a "$CURRENT_TAG" -m "Release $CURRENT_TAG"
-          fi
-
-      - name: Generate changelog
-        id: generate_changelog
+      - name: Get previous tag
+        id: prev_tag
         run: |
-          CHANGELOG="${{ github.workspace }}-CHANGELOG.txt"
+          CURRENT="${{ steps.get_tag.outputs.tag }}"
+          PREV=$(git tag --sort=-version:refname | grep -v "^$CURRENT$" | head -n 1 || true)
+          echo "prev=$PREV" >> $GITHUB_OUTPUT
 
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${{ steps.get_current_tag.outputs.current_tag }}^" 2>/dev/null || true)
+      - name: Generate changelog (safe per-release)
+        run: |
+          CURRENT="${{ steps.get_tag.outputs.tag }}"
+          PREV="${{ steps.prev_tag.outputs.prev }}"
+          OUT="${{ github.workspace }}-CHANGELOG.txt"
 
-          if [ -n "$PREVIOUS_TAG" ]; then
-            echo "Generating changelog from $PREVIOUS_TAG to ${{ steps.get_current_tag.outputs.current_tag }}"
-            git log \
-              --pretty=format:"- %s (%h)" \
-              "$PREVIOUS_TAG..${{ steps.get_current_tag.outputs.current_tag }}" \
-              > "$CHANGELOG"
+          echo "Current: $CURRENT"
+          echo "Previous: $PREV"
+
+          if [ -n "$PREV" ]; then
+            git log --pretty=format:"- %s (%h)" "$PREV..$CURRENT" > "$OUT"
           else
-            echo "No previous tag found. Using full history."
-            git log \
-              --pretty=format:"- %s (%h)" \
-              > "$CHANGELOG"
+            git log --pretty=format:"- %s (%h)" -n 50 > "$OUT"
           fi
 
-          if [ ! -s "$CHANGELOG" ]; then
-            echo "No changes." > "$CHANGELOG"
-          fi
+          [ -s "$OUT" ] || echo "No changes" > "$OUT"
 
-      - name: Build Release
+      - name: Build normal release
         run: |
           chmod +x build.sh
           ./build.sh --release --compress --skip-i18n
-        env:
-          CROWDIN_PROJECT_ID: ""
-          CROWDIN_PERSONAL_TOKEN: ""
 
-      - name: Move regular build
+      - name: Save normal dist
         run: |
           mkdir -p regular-dist
           mv dist/* regular-dist/
 
-      - name: Build Lite Release
+      - name: Build lite release
         run: |
           chmod +x build.sh
           ./build.sh --release --compress --lite --skip-i18n
-        env:
-          CROWDIN_PROJECT_ID: ""
-          CROWDIN_PERSONAL_TOKEN: ""
 
-      - name: Move lite build and restore regular build
+      - name: Prepare dist packages
         run: |
           mkdir -p lite-dist
           mv dist/* lite-dist/
           mv regular-dist/* dist/
 
-      - name: Upload Release Assets
+      - name: Create GitHub Release
         run: |
-          git tag -d ${{ steps.get_current_tag.outputs.current_tag }}
           gh release create \
-            --title "Release ${{ steps.get_current_tag.outputs.current_tag }}" \
+            "${{ steps.get_tag.outputs.tag }}" \
+            --title "Release ${{ steps.get_tag.outputs.tag }}" \
             --notes-file "${{ github.workspace }}-CHANGELOG.txt" \
             --prerelease=${{ steps.check_pre_release.outputs.is_pre_release }} \
-            ${{ steps.get_current_tag.outputs.current_tag }} \
-            dist/openlist-frontend-dist-v*.tar.gz lite-dist/openlist-frontend-dist-lite-v*.tar.gz dist/i18n.tar.gz
+            dist/openlist-frontend-dist-v*.tar.gz \
+            lite-dist/openlist-frontend-dist-lite-v*.tar.gz \
+            dist/i18n.tar.gz
         env:
           GITHUB_TOKEN: ${{ github.token }}
-
-      - name: Prepare for npm
-        run: |
-          rm -f dist/openlist-frontend-dist-v*.tar.gz
-          rm -f lite-dist/openlist-frontend-dist-lite-v*.tar.gz
-          mkdir dist/lite
-          cp -r lite-dist/. dist/lite/
-
-          if ! jq -e '.name and .version' package.json > /dev/null; then
-            echo "Error: Invalid package.json"
-            exit 1
-          fi
-
-      - name: Publish npm
-        run: |
-          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
-
-          if [ -z "${{ secrets.NPM_TOKEN }}" ]; then
-            echo "NPM_TOKEN not set, performing dry run"
-            pnpm publish --dry-run --no-git-checks --access public
-          else
-            echo "Publishing to npm..."
-            pnpm publish --no-git-checks --access public
-          fi
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
 permissions:
   contents: write
