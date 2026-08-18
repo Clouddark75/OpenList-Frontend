@@ -48,7 +48,7 @@
     "cross-env": "^10.1.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.3.0",
-    "mermaid": "^11.16.0",
+    "mermaid": "^11.16.1",
     "prettier": "3.9.6",
     "rehype-stringify": "^10.0.1",
     "remark-parse": "^11.0.0",
@@ -63,7 +63,7 @@
   "dependencies": {
     "@egjs/view360": "4.0.0-beta.7",
     "@embedpdf/snippet": "^2.14.4",
-    "@hope-ui/solid": "github:OpenListTeam/hope-ui#31b436e36ae5d266016814ba71a442ffa9d91181",
+    "@hope-ui/solid": "github:OpenListTeam/hope-ui#264b7511e37dc6e5a5fb8f67f8801d94a058a700",
     "@jellyfin/libass-wasm": "^4.2.4",
     "@monaco-editor/loader": "1.7.0",
     "@solid-primitives/i18n": "^2.2.1",
