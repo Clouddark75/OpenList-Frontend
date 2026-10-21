@@ -95,7 +95,7 @@ export const fsMove = (
   dst_dir: string,
   names: string[],
   overwrite: boolean,
-  skipExisting: boolean,
+  skip_existing: boolean,
   follow_seed = false,
 ): PEmptyResp => {
   return r.post("/fs/move", {
@@ -103,7 +103,7 @@ export const fsMove = (
     dst_dir,
     names,
     overwrite,
-    skip_existing: skipExisting,
+    skip_existing,
     follow_seed,
   })
 }
@@ -121,7 +121,7 @@ export const fsCopy = (
   dst_dir: string,
   names: string[],
   overwrite: boolean,
-  skipExisting: boolean,
+  skip_existing: boolean,
   merge: boolean,
   follow_seed = false,
 ): PEmptyResp => {
@@ -130,7 +130,7 @@ export const fsCopy = (
     dst_dir,
     names,
     overwrite,
-    skip_existing: skipExisting,
+    skip_existing,
     merge,
     follow_seed,
   })
