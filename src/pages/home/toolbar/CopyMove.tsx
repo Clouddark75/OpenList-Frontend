@@ -1,25 +1,30 @@
 import { Checkbox, createDisclosure, VStack, Button } from "@hope-ui/solid"
-import { createSignal, onCleanup, onMount } from "solid-js"
+import { createSignal, onCleanup } from "solid-js"
 import { ModalFolderChoose, FolderTreeHandler } from "~/components"
 import { useFetch, usePath, useRouter, useT } from "~/hooks"
 import { selectedObjs, userCan } from "~/store"
 import { bus, fsCopy, fsMove, handleRespWithNotifySuccess } from "~/utils"
 import { CgFolderAdd } from "solid-icons/cg"
 
-// Claves para localStorage
-const STORAGE_KEY_OVERWRITE = "file-operation-overwrite"
-const STORAGE_KEY_SKIP_EXISTING = "file-operation-skip-existing"
-const STORAGE_KEY_MERGE = "file-operation-merge"
+// Persistencia de preferencias (overwrite y follow_seed NO se persisten a propósito:
+// son opciones destructivas / por operación, así que siempre arrancan desmarcadas)
+const KEY_SKIP_EXISTING = "conflict-policy-skip-existing"
+const KEY_MERGE = "conflict-policy-merge"
 
-// Funciones helper para localStorage
-const getStoredBoolean = (key: string, defaultValue: boolean): boolean => {
-  const stored = localStorage.getItem(key)
-  if (stored === null) return defaultValue
-  return stored === "true"
+const loadBool = (key: string): boolean => {
+  try {
+    return localStorage.getItem(key) === "true"
+  } catch {
+    return false
+  }
 }
 
-const setStoredBoolean = (key: string, value: boolean): void => {
-  localStorage.setItem(key, value.toString())
+const saveBool = (key: string, value: boolean) => {
+  try {
+    localStorage.setItem(key, String(value))
+  } catch {
+    // localStorage no disponible: se ignora
+  }
 }
 
 export const CreateFolderButton = (props: { handler?: FolderTreeHandler }) => {
@@ -44,79 +49,26 @@ export const Copy = () => {
   const [loading, ok] = useFetch(fsCopy)
   const { pathname } = useRouter()
   const { refresh } = usePath()
-  
-  // Inicializar con valores de localStorage
-  const [overwrite, setOverwrite] = createSignal(
-    getStoredBoolean(STORAGE_KEY_OVERWRITE, false)
-  )
-  const [skipExisting, setSkipExisting] = createSignal(
-    getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false)
-  )
+  const [overwrite, setOverwrite] = createSignal(false)
+  const [skipExisting, setSkipExisting] = createSignal(loadBool(KEY_SKIP_EXISTING))
   const [merge, setMerge] = createSignal(
-    getStoredBoolean(STORAGE_KEY_MERGE, false)
+    !loadBool(KEY_SKIP_EXISTING) && loadBool(KEY_MERGE),
   )
-
-  // Cargar valores al montar
-  onMount(() => {
-    setOverwrite(getStoredBoolean(STORAGE_KEY_OVERWRITE, false))
-    setSkipExisting(getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false))
-    setMerge(getStoredBoolean(STORAGE_KEY_MERGE, false))
-  })
-
   const [followSeed, setFollowSeed] = createSignal(false)
   const handler = (name: string) => {
     if (name === "copy") {
       onOpen()
-      // Recargar valores guardados al abrir
-      setOverwrite(getStoredBoolean(STORAGE_KEY_OVERWRITE, false))
-      setSkipExisting(getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false))
-      setMerge(getStoredBoolean(STORAGE_KEY_MERGE, false))
-      setSkipExisting(false)
-      setMerge(false)
+      const skip = loadBool(KEY_SKIP_EXISTING)
+      setOverwrite(false)
+      setSkipExisting(skip)
+      setMerge(!skip && loadBool(KEY_MERGE))
       setFollowSeed(false)
     }
   }
-
   bus.on("tool", handler)
   onCleanup(() => {
     bus.off("tool", handler)
   })
-
-  const handleOverwriteChange = () => {
-    const newValue = !overwrite()
-    if (newValue) {
-      // Si activamos overwrite, desactivamos skip y merge
-      setSkipExisting(false)
-      setMerge(false)
-      setStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false)
-      setStoredBoolean(STORAGE_KEY_MERGE, false)
-    }
-    setOverwrite(newValue)
-    setStoredBoolean(STORAGE_KEY_OVERWRITE, newValue)
-  }
-
-  const handleSkipExistingChange = () => {
-    const newValue = !skipExisting()
-    if (newValue) {
-      // Si activamos skip, desactivamos merge
-      setMerge(false)
-      setStoredBoolean(STORAGE_KEY_MERGE, false)
-    }
-    setSkipExisting(newValue)
-    setStoredBoolean(STORAGE_KEY_SKIP_EXISTING, newValue)
-  }
-
-  const handleMergeChange = () => {
-    const newValue = !merge()
-    if (newValue) {
-      // Si activamos merge, desactivamos skip
-      setSkipExisting(false)
-      setStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false)
-    }
-    setMerge(newValue)
-    setStoredBoolean(STORAGE_KEY_MERGE, newValue)
-  }
-
   return (
     <ModalFolderChoose
       header={t("home.toolbar.choose_dst_folder")}
@@ -129,14 +81,30 @@ export const Copy = () => {
           <Checkbox
             mr="auto"
             checked={overwrite()}
-            onChange={handleOverwriteChange}
+            onChange={() => {
+              const curOverwrite = !overwrite()
+              if (curOverwrite) {
+                // Solo estado en pantalla: lo guardado en localStorage no se toca
+                setSkipExisting(false)
+                setMerge(false)
+              } else {
+                // Al desmarcar overwrite, se restauran las preferencias guardadas
+                setSkipExisting(loadBool(KEY_SKIP_EXISTING))
+                setMerge(!loadBool(KEY_SKIP_EXISTING) && loadBool(KEY_MERGE))
+              }
+              setOverwrite(curOverwrite)
+            }}
           >
             {t("home.conflict_policy.overwrite_existing")}
           </Checkbox>
           <Checkbox
             mr="auto"
             checked={skipExisting()}
-            onChange={handleSkipExistingChange}
+            onChange={() => {
+              const next = !skipExisting()
+              setSkipExisting(next)
+              saveBool(KEY_SKIP_EXISTING, next)
+            }}
             disabled={overwrite() || merge()}
           >
             {t("home.conflict_policy.skip_existing")}
@@ -144,7 +112,11 @@ export const Copy = () => {
           <Checkbox
             mr="auto"
             checked={merge()}
-            onChange={handleMergeChange}
+            onChange={() => {
+              const next = !merge()
+              setMerge(next)
+              saveBool(KEY_MERGE, next)
+            }}
             disabled={overwrite() || skipExisting()}
           >
             {t("home.conflict_policy.merge")}
@@ -184,54 +156,21 @@ export const Move = () => {
   const [loading, ok] = useFetch(fsMove)
   const { pathname } = useRouter()
   const { refresh } = usePath()
-  
-  // Inicializar con valores de localStorage
-  const [overwrite, setOverwrite] = createSignal(
-    getStoredBoolean(STORAGE_KEY_OVERWRITE, false)
-  )
-  const [skipExisting, setSkipExisting] = createSignal(
-    getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false)
-  )
-
-  // Cargar valores al montar
-  onMount(() => {
-    setOverwrite(getStoredBoolean(STORAGE_KEY_OVERWRITE, false))
-    setSkipExisting(getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false))
-  })
-
+  const [overwrite, setOverwrite] = createSignal(false)
+  const [skipExisting, setSkipExisting] = createSignal(loadBool(KEY_SKIP_EXISTING))
   const [followSeed, setFollowSeed] = createSignal(false)
   const handler = (name: string) => {
     if (name === "move") {
       onOpen()
-      // Recargar valores guardados al abrir
-      setOverwrite(getStoredBoolean(STORAGE_KEY_OVERWRITE, false))
-      setSkipExisting(getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false))
-      setSkipExisting(false)
+      setOverwrite(false)
+      setSkipExisting(loadBool(KEY_SKIP_EXISTING))
       setFollowSeed(false)
     }
   }
-
   bus.on("tool", handler)
   onCleanup(() => {
     bus.off("tool", handler)
   })
-
-  const handleOverwriteChange = () => {
-    const newValue = !overwrite()
-    if (newValue) {
-      setSkipExisting(false)
-      setStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false)
-    }
-    setOverwrite(newValue)
-    setStoredBoolean(STORAGE_KEY_OVERWRITE, newValue)
-  }
-
-  const handleSkipExistingChange = () => {
-    const newValue = !skipExisting()
-    setSkipExisting(newValue)
-    setStoredBoolean(STORAGE_KEY_SKIP_EXISTING, newValue)
-  }
-
   return (
     <ModalFolderChoose
       header={t("home.toolbar.choose_dst_folder")}
@@ -244,14 +183,26 @@ export const Move = () => {
           <Checkbox
             mr="auto"
             checked={overwrite()}
-            onChange={handleOverwriteChange}
+            onChange={() => {
+              const curOverwrite = !overwrite()
+              if (curOverwrite) {
+                setSkipExisting(false)
+              } else {
+                setSkipExisting(loadBool(KEY_SKIP_EXISTING))
+              }
+              setOverwrite(curOverwrite)
+            }}
           >
             {t("home.conflict_policy.overwrite_existing")}
           </Checkbox>
           <Checkbox
             mr="auto"
             checked={skipExisting()}
-            onChange={handleSkipExistingChange}
+            onChange={() => {
+              const next = !skipExisting()
+              setSkipExisting(next)
+              saveBool(KEY_SKIP_EXISTING, next)
+            }}
             disabled={overwrite()}
           >
             {t("home.conflict_policy.skip_existing")}
