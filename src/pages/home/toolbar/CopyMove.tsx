@@ -63,6 +63,7 @@ export const Copy = () => {
     setMerge(getStoredBoolean(STORAGE_KEY_MERGE, false))
   })
 
+  const [followSeed, setFollowSeed] = createSignal(false)
   const handler = (name: string) => {
     if (name === "copy") {
       onOpen()
@@ -70,6 +71,9 @@ export const Copy = () => {
       setOverwrite(getStoredBoolean(STORAGE_KEY_OVERWRITE, false))
       setSkipExisting(getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false))
       setMerge(getStoredBoolean(STORAGE_KEY_MERGE, false))
+      setSkipExisting(false)
+      setMerge(false)
+      setFollowSeed(false)
     }
   }
 
@@ -145,6 +149,14 @@ export const Copy = () => {
           >
             {t("home.conflict_policy.merge")}
           </Checkbox>
+          <Checkbox
+            mr="auto"
+            checked={followSeed()}
+            disabled={selectedObjs().some((obj) => obj.is_dir)}
+            onChange={() => setFollowSeed(!followSeed())}
+          >
+            {t("home.toolbar.follow_seed")}
+          </Checkbox>
         </VStack>
       }
       onSubmit={async (dst) => {
@@ -155,6 +167,7 @@ export const Copy = () => {
           overwrite(),
           skipExisting(),
           merge(),
+          followSeed(),
         )
         handleRespWithNotifySuccess(resp, () => {
           refresh()
@@ -186,12 +199,15 @@ export const Move = () => {
     setSkipExisting(getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false))
   })
 
+  const [followSeed, setFollowSeed] = createSignal(false)
   const handler = (name: string) => {
     if (name === "move") {
       onOpen()
       // Recargar valores guardados al abrir
       setOverwrite(getStoredBoolean(STORAGE_KEY_OVERWRITE, false))
       setSkipExisting(getStoredBoolean(STORAGE_KEY_SKIP_EXISTING, false))
+      setSkipExisting(false)
+      setFollowSeed(false)
     }
   }
 
@@ -240,6 +256,14 @@ export const Move = () => {
           >
             {t("home.conflict_policy.skip_existing")}
           </Checkbox>
+          <Checkbox
+            mr="auto"
+            checked={followSeed()}
+            disabled={selectedObjs().some((obj) => obj.is_dir)}
+            onChange={() => setFollowSeed(!followSeed())}
+          >
+            {t("home.toolbar.follow_seed")}
+          </Checkbox>
         </VStack>
       }
       onSubmit={async (dst) => {
@@ -249,6 +273,7 @@ export const Move = () => {
           selectedObjs().map((obj) => obj.name),
           overwrite(),
           skipExisting(),
+          followSeed(),
         )
         handleRespWithNotifySuccess(resp, () => {
           refresh()
